@@ -20,73 +20,69 @@ func main() {
 		panic(err)
 	}
 
+	const ampCount = 5
+
 	switch os.Args[1] {
 	case "amps":
-		const ampCount = 5
-		var maxOutputSignal int
-		maxPhaseSettings := make([]int, ampCount)
-		perm([]int{0, 1, 2, 3, 4}, func(p []int) {
-			var g errgroup.Group
-			amps := make([]*amp, 0, ampCount)
-			for i := 0; i < ampCount; i++ {
-				amp := newAmp(i, p[i])
-				if i == 0 {
-					amp.in <- 0 // first amp signal
-				} else {
-					amp.in = amps[i-1].out
-				}
-				amps = append(amps, amp)
-				g.Go(func() error { return amp.run(program) })
-			}
-
-			if err := g.Wait(); err != nil {
-				panic(err)
-			}
-
-			output := <-amps[len(amps)-1].out
-			if output > maxOutputSignal {
-				maxOutputSignal = output
-				copy(maxPhaseSettings, p)
-			}
-		}, 0)
-
-		fmt.Println(maxPhaseSettings)
-		fmt.Println(maxOutputSignal)
+		mos, mop, err := run(program, ampCount, []int{0, 1, 2, 3, 4}, nil)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(mos)
+		fmt.Println(mop)
 	case "feedback":
-		const ampCount = 5
-		var maxOutputSignal int
-		maxPhaseSettings := make([]int, ampCount)
-		perm([]int{5, 6, 7, 8, 9}, func(p []int) {
-			var g errgroup.Group
-			amps := make([]*amp, 0, ampCount)
-			for i := 0; i < ampCount; i++ {
-				amp := newAmp(i, p[i])
-				if i == 0 {
-					amp.in <- 0 // first amp signal
-				} else {
-					amp.in = amps[i-1].out
-				}
-				if i == ampCount-1 {
-					amp.out = amps[0].in // hook last amp back up to first
-				}
-				amps = append(amps, amp)
-				g.Go(func() error { return amp.run(program) })
-			}
-
-			if err := g.Wait(); err != nil {
-				panic(err)
-			}
-
-			output := <-amps[len(amps)-1].out
-			if output > maxOutputSignal {
-				maxOutputSignal = output
-				copy(maxPhaseSettings, p)
-			}
-		}, 0)
-
-		fmt.Println(maxPhaseSettings)
-		fmt.Println(maxOutputSignal)
+		mos, mop, err := runFeedback(program, ampCount, []int{5, 6, 7, 8, 9})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(mos)
+		fmt.Println(mop)
 	}
+}
+
+func run(program []int, ampCount int, phases []int, setup func(amps []*amp, amp *amp, i int)) (int, []int, error) {
+	var mos int
+	mop := make([]int, ampCount)
+	var gErr error
+
+	perm(phases, func(p []int) {
+		var g errgroup.Group
+		amps := make([]*amp, 0, ampCount)
+		for i := 0; i < ampCount; i++ {
+			amp := newAmp(i, p[i])
+			if i == 0 {
+				amp.in <- 0 // first amp signal
+			} else {
+				amp.in = amps[i-1].out
+			}
+			if setup != nil {
+				setup(amps, amp, i)
+			}
+			amps = append(amps, amp)
+			g.Go(func() error { return amp.run(program) })
+		}
+
+		if err := g.Wait(); err != nil {
+			gErr = err
+			return
+		}
+
+		output := <-amps[len(amps)-1].out
+		if output > mos {
+			mos = output
+			copy(mop, p)
+		}
+	}, 0)
+
+	return mos, mop, gErr
+}
+
+func runFeedback(program []int, ampCount int, phases []int) (int, []int, error) {
+	return run(program, ampCount, phases, func(amps []*amp, amp *amp, i int) {
+		if i == ampCount-1 {
+			amp.out = amps[0].in // hook last amp back up to first
+		}
+	})
 }
 
 type amp struct {
