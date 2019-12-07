@@ -20,34 +20,73 @@ func main() {
 		panic(err)
 	}
 
-	const ampCount = 5
-	var maxOutputSignal int
-	maxPhaseSettings := make([]int, ampCount)
-	perm([]int{0, 1, 2, 3, 4}, func(p []int) {
-		var g errgroup.Group
-		amps := make([]*amp, 0, ampCount)
-		for i := 0; i < ampCount; i++ {
-			amp := newAmp(i, p[i])
-			if i == 0 {
-				amp.in <- 0 // first amp phase
-			} else {
-				amp.in = amps[i-1].out
+	switch os.Args[1] {
+	case "amps":
+		const ampCount = 5
+		var maxOutputSignal int
+		maxPhaseSettings := make([]int, ampCount)
+		perm([]int{0, 1, 2, 3, 4}, func(p []int) {
+			var g errgroup.Group
+			amps := make([]*amp, 0, ampCount)
+			for i := 0; i < ampCount; i++ {
+				amp := newAmp(i, p[i])
+				if i == 0 {
+					amp.in <- 0 // first amp signal
+				} else {
+					amp.in = amps[i-1].out
+				}
+				amps = append(amps, amp)
+				g.Go(func() error { return amp.run(program) })
 			}
-			amps = append(amps, amp)
-			g.Go(func() error { return amp.run(program) })
-		}
 
-		g.Wait()
+			if err := g.Wait(); err != nil {
+				panic(err)
+			}
 
-		output := <-amps[len(amps)-1].out
-		if output > maxOutputSignal {
-			maxOutputSignal = output
-			copy(maxPhaseSettings, p)
-		}
-	}, 0)
+			output := <-amps[len(amps)-1].out
+			if output > maxOutputSignal {
+				maxOutputSignal = output
+				copy(maxPhaseSettings, p)
+			}
+		}, 0)
 
-	fmt.Println(maxPhaseSettings)
-	fmt.Println(maxOutputSignal)
+		fmt.Println(maxPhaseSettings)
+		fmt.Println(maxOutputSignal)
+	case "feedback":
+		const ampCount = 5
+		var maxOutputSignal int
+		maxPhaseSettings := make([]int, ampCount)
+		perm([]int{5, 6, 7, 8, 9}, func(p []int) {
+			var g errgroup.Group
+			amps := make([]*amp, 0, ampCount)
+			for i := 0; i < ampCount; i++ {
+				amp := newAmp(i, p[i])
+				if i == 0 {
+					amp.in <- 0 // first amp signal
+				} else {
+					amp.in = amps[i-1].out
+				}
+				if i == ampCount-1 {
+					amp.out = amps[0].in // hook last amp back up to first
+				}
+				amps = append(amps, amp)
+				g.Go(func() error { return amp.run(program) })
+			}
+
+			if err := g.Wait(); err != nil {
+				panic(err)
+			}
+
+			output := <-amps[len(amps)-1].out
+			if output > maxOutputSignal {
+				maxOutputSignal = output
+				copy(maxPhaseSettings, p)
+			}
+		}, 0)
+
+		fmt.Println(maxPhaseSettings)
+		fmt.Println(maxOutputSignal)
+	}
 }
 
 type amp struct {
@@ -72,10 +111,9 @@ func (a *amp) run(program []int) error {
 		switch inputState {
 		case 0:
 			return a.phase, nil
-		case 1:
-			return <-a.in, nil
 		default:
-			return 0, fmt.Errorf("unknown input state %d", inputState)
+			out := <-a.in
+			return out, nil
 		}
 	}
 
