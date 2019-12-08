@@ -47,3 +47,25 @@ func TestFindFewestZeroes(t *testing.T) {
 		t.Errorf("got fewest zeroes layer %d, want %d", l, 1)
 	}
 }
+
+func TestDecodeLayers(t *testing.T) {
+	const data = "0222112222120000"
+
+	layers, err := extractLayers(data, 2, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := decodeLayers(layers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := [][]int{
+		{0, 1},
+		{1, 0},
+	}
+	if d := cmp.Diff(want, got); d != "" {
+		t.Errorf("decoded layer mismatch (-want +got):\n%s", d)
+	}
+}

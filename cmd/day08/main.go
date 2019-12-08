@@ -3,6 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	_ "image/png"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -20,17 +24,44 @@ func main() {
 		panic(err)
 	}
 
-	mzl, err := findFewestZeroes(layers)
-	if err != nil {
-		panic(err)
+	switch os.Args[1] {
+	case "checksum":
+		mzl, err := findFewestZeroes(layers)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(mzl)
+
+		up := countUniquePixels(layers[mzl])
+		fmt.Println(up)
+
+		fmt.Println(up[1] * up[2])
+	case "decode-ascii", "decode-png":
+		layer, err := decodeLayers(layers)
+		if err != nil {
+			panic(err)
+		}
+
+		switch os.Args[1] {
+		case "decode-ascii":
+			for _, r := range layer {
+				for _, p := range r {
+					if p == 1 {
+						fmt.Print("*")
+					} else {
+						fmt.Print(" ")
+					}
+				}
+				fmt.Println()
+			}
+		case "decode-png":
+			img := layerImage(layer)
+			if err := png.Encode(os.Stdout, img); err != nil {
+				panic(err)
+			}
+		}
 	}
-
-	fmt.Println(mzl)
-
-	up := countUniquePixels(layers[mzl])
-	fmt.Println(up)
-
-	fmt.Println(up[1] * up[2])
 
 }
 
@@ -66,13 +97,8 @@ func findFewestZeroes(layers [][][]int) (int, error) {
 	zcs := make(map[int]int)
 
 	for i, l := range layers {
-		for _, row := range l {
-			for _, x := range row {
-				if x == 0 {
-					zcs[i]++
-				}
-			}
-		}
+		up := countUniquePixels(l)
+		zcs[i] = up[0]
 	}
 
 	var fewestLayer, fewestZeroes int = -1, 0
@@ -101,4 +127,48 @@ func countUniquePixels(layer [][]int) map[int]int {
 	}
 
 	return up
+}
+
+func decodeLayers(layers [][][]int) ([][]int, error) {
+	if len(layers) == 0 {
+		return nil, nil
+	}
+
+	if len(layers[0]) == 0 {
+		return nil, nil
+	}
+
+	height := len(layers[0])
+	width := len(layers[0][0])
+
+	out := make([][]int, height)
+
+	for i := 0; i < height; i++ {
+		out[i] = make([]int, width)
+		for j := 0; j < width; j++ {
+			for k := 0; k < len(layers); k++ {
+				p := layers[k][i][j]
+				if p < 2 {
+					out[i][j] = p
+					break
+				}
+			}
+		}
+	}
+
+	return out, nil
+}
+
+type layerImage [][]int
+
+func (l layerImage) ColorModel() color.Model {
+	return color.GrayModel
+}
+
+func (l layerImage) Bounds() image.Rectangle {
+	return image.Rect(0, 0, len(l[0]), len(l))
+}
+
+func (l layerImage) At(x, y int) color.Color {
+	return color.Gray{Y: uint8(l[y][x]) * 255}
 }
