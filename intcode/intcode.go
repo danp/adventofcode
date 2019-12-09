@@ -22,7 +22,7 @@ var ops = map[int]op{
 		code: 1,
 		pc:   3,
 		x: func(v *vm) error {
-			v.set(v.val(2), v.mval(0)+v.mval(1))
+			v.set(2, v.mval(0)+v.mval(1))
 			return nil
 		},
 	},
@@ -31,7 +31,7 @@ var ops = map[int]op{
 		code: 2,
 		pc:   3,
 		x: func(v *vm) error {
-			v.set(v.val(2), v.mval(0)*v.mval(1))
+			v.set(2, v.mval(0)*v.mval(1))
 			return nil
 		},
 	},
@@ -47,7 +47,7 @@ var ops = map[int]op{
 			if err != nil {
 				return err
 			}
-			v.set(v.val(0), in)
+			v.set(0, in)
 			return nil
 		},
 	},
@@ -93,7 +93,7 @@ var ops = map[int]op{
 			if v.mval(0) < v.mval(1) {
 				res = 1
 			}
-			v.set(v.val(2), res)
+			v.set(2, res)
 			return nil
 		},
 	},
@@ -106,7 +106,16 @@ var ops = map[int]op{
 			if v.mval(0) == v.mval(1) {
 				res = 1
 			}
-			v.set(v.val(2), res)
+			v.set(2, res)
+			return nil
+		},
+	},
+	9: {
+		name: "adjust-relative-base",
+		code: 9,
+		pc:   1,
+		x: func(v *vm) error {
+			v.relbase += v.mval(0)
 			return nil
 		},
 	},
@@ -130,21 +139,26 @@ type pmode int
 const (
 	position  pmode = 1
 	immediate pmode = 2
+	relative  pmode = 3
 )
 
 type vm struct {
 	program []int
+	mem     []int
 	pos     int
 	ins     instruction
 
 	input  func() (int, error)
 	output func(int) error
 
-	jumped bool
+	jumped  bool
+	relbase int
 }
 
 func (v *vm) run() error {
-	for v.pos <= len(v.program) {
+	copy(v.mem, v.program)
+
+	for v.pos <= len(v.mem) {
 		if err := v.stepInstruction(); err != nil {
 			return err
 		}
@@ -178,19 +192,28 @@ func (v *vm) stepInstruction() error {
 }
 
 func (v *vm) val(i int) int {
-	return v.program[v.pos+i]
+	return v.mem[v.pos+i]
 }
 
 func (v *vm) mval(i int) int {
-	val := v.val(i)
-	if v.ins.pmodes[i] == position {
-		val = v.program[val]
+	switch v.ins.pmodes[i] {
+	case position:
+		return v.mem[v.val(i)]
+	case immediate:
+		return v.val(i)
+	case relative:
+		return v.mem[v.relbase+v.val(i)]
+	default:
+		panic("unknown pmode")
 	}
-	return val
 }
 
 func (v *vm) set(i, val int) {
-	v.program[i] = val
+	j := v.val(i)
+	if v.ins.pmodes[i] == relative {
+		j += v.relbase
+	}
+	v.mem[j] = val
 }
 
 func (v *vm) jump(pos int) {
@@ -198,12 +221,12 @@ func (v *vm) jump(pos int) {
 	v.jumped = true
 }
 
-// Run runs program, calling input when input is requested and
-// calling output when output is requested.
+// Run runs program, working in mem, calling input when input
+// is requested and calling output when output is requested.
 //
-// The contents of program may be modified.
-func Run(program []int, input func() (int, error), output func(int) error) error {
-	vm := &vm{program: program, input: input, output: output}
+// The contents of mem will be modified.
+func Run(program, mem []int, input func() (int, error), output func(int) error) error {
+	vm := &vm{program: program, mem: mem, input: input, output: output}
 	return vm.run()
 }
 
@@ -257,6 +280,8 @@ func parseInstruction(in int) (instruction, error) {
 			m = position
 		case 1:
 			m = immediate
+		case 2:
+			m = relative
 		default:
 			return ins, fmt.Errorf("unknown param mode in instruction %d", in)
 		}

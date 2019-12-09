@@ -25,13 +25,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	mem := make([]int, len(program))
+
 	switch os.Args[1] {
 	case "one":
-		if err := intcode.Run(program, nil, nil); err != nil {
+		if err := intcode.Run(program, mem, nil, nil); err != nil {
 			panic(err)
 		}
 
-		fmt.Println(program[0])
+		fmt.Println(mem[0])
 	case "finder":
 		for {
 			p := make([]int, len(program))
@@ -43,11 +45,11 @@ func main() {
 			p[1] = noun
 			p[2] = verb
 
-			if err := intcode.Run(p, nil, nil); err != nil {
+			if err := intcode.Run(p, mem, nil, nil); err != nil {
 				panic(err)
 			}
 
-			if p[0] == 19690720 {
+			if mem[0] == 19690720 {
 				fmt.Println(noun, verb, 100*noun+verb)
 				break
 			}

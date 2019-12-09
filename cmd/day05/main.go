@@ -19,17 +19,19 @@ func main() {
 		panic(err)
 	}
 
+	mem := make([]int, len(program))
+
 	switch os.Args[1] {
 	case "ac":
 		input := func() (int, error) { return 1, nil }
 		output := func(x int) error { fmt.Println(x); return nil }
-		if err := intcode.Run(program, input, output); err != nil {
+		if err := intcode.Run(program, mem, input, output); err != nil {
 			panic(err)
 		}
 	case "radiators":
 		input := func() (int, error) { return 5, nil }
 		output := func(x int) error { fmt.Println(x); return nil }
-		if err := intcode.Run(program, input, output); err != nil {
+		if err := intcode.Run(program, mem, input, output); err != nil {
 			panic(err)
 		}
 	}

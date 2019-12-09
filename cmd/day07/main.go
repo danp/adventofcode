@@ -120,7 +120,8 @@ func (a *amp) run(program []int) error {
 
 	p := make([]int, len(program))
 	copy(p, program)
-	return intcode.Run(p, input, output)
+	mem := make([]int, len(p))
+	return intcode.Run(p, mem, input, output)
 }
 
 func perm(a []int, f func([]int), i int) {
