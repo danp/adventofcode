@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/danp/adventofcode2019/intcode"
+	"github.com/danp/adventofcode/2019/intcode"
 	"golang.org/x/sync/errgroup"
 )
 

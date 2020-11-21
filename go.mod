@@ -1,4 +1,4 @@
-module github.com/danp/adventofcode2019
+module github.com/danp/adventofcode
 
 go 1.14
 

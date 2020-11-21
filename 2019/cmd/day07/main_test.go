@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/danp/adventofcode2019/intcode"
+	"github.com/danp/adventofcode/2019/intcode"
 	"github.com/google/go-cmp/cmp"
 )
 

@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/danp/adventofcode2019/intcode"
+	"github.com/danp/adventofcode/2019/intcode"
 )
 
 func main() {
