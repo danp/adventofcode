@@ -55,7 +55,7 @@ func main() {
 			if x < 0 || x > 255 {
 				return fmt.Errorf("non-ascii output %d", x)
 			}
-			fmt.Print(string(x))
+			fmt.Print(string(rune(x)))
 			return nil
 		}
 

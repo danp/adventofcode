@@ -64,7 +64,7 @@ func part1(program []int) {
 				fmt.Println(x)
 				done = true
 			} else {
-				fmt.Fprint(&outb, string(x))
+				fmt.Fprint(&outb, x)
 			}
 			return nil
 		}
@@ -110,7 +110,7 @@ func part2(program []int) {
 				fmt.Println(x)
 				done = true
 			} else {
-				fmt.Fprint(&outb, string(x))
+				fmt.Fprint(&outb, string(rune(x)))
 			}
 			return nil
 		}

@@ -157,7 +157,7 @@ func pnumchr(pnum int) string {
 	if chr > 'Z' {
 		chr = 'a' + chr - 'Z' - 1
 	}
-	return string(chr)
+	return string(rune(chr))
 }
 
 var vlre = regexp.MustCompile(`[A-Z]`)
