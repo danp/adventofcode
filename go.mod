@@ -1,8 +1,8 @@
 module github.com/danp/adventofcode
 
-go 1.14
+go 1.16
 
 require (
-	github.com/google/go-cmp v0.3.1
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	github.com/google/go-cmp v0.5.3
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 )
