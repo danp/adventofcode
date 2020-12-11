@@ -37,10 +37,9 @@ func main() {
 	for {
 		newgrid := make(map[image.Point]bool)
 		var changes int
-		for pt := range grid {
-			ptocc := grid[pt]
-
+		for pt, ptocc := range grid {
 			var neighbs int
+
 			for _, sl := range slopes {
 				if grid[pt.Add(sl)] {
 					neighbs++
@@ -84,48 +83,40 @@ func main() {
 	for {
 		newgrid := make(map[image.Point]bool)
 		var changes int
-		for y := 0; y < len(lines); y++ {
-			for x := 0; x < len(lines[0]); x++ {
-				pt := image.Pt(x, y)
-				if _, ok := grid[pt]; !ok {
+		for pt, ptocc := range grid {
+			var neighbs int
+
+			for _, sl := range slopes {
+				slpt, ok := ptslopecache[pt][sl]
+				if ok {
+					if grid[slpt] {
+						neighbs++
+					}
 					continue
 				}
-				ptocc := grid[pt]
 
-				var neighbs int
-
-				for _, sl := range slopes {
-					slpt, ok := ptslopecache[pt][sl]
+				for slpt := pt.Add(sl); slpt.X >= 0 && slpt.X <= max.X && slpt.Y >= 0 && slpt.Y <= max.Y; slpt = slpt.Add(sl) {
+					v, ok := grid[slpt]
+					if v {
+						neighbs++
+					}
 					if ok {
-						if grid[slpt] {
-							neighbs++
-						}
-						continue
-					}
-
-					for slpt := pt.Add(sl); slpt.X >= 0 && slpt.X <= max.X && slpt.Y >= 0 && slpt.Y <= max.Y; slpt = slpt.Add(sl) {
-						v, ok := grid[slpt]
-						if v {
-							neighbs++
-						}
-						if ok {
-							ptslopecache[pt][sl] = slpt
-							break
-						}
+						ptslopecache[pt][sl] = slpt
+						break
 					}
 				}
+			}
 
-				if !ptocc && neighbs == 0 {
-					newgrid[pt] = true
-				} else if ptocc && neighbs >= 5 {
-					newgrid[pt] = false
-				} else {
-					newgrid[pt] = grid[pt]
-				}
+			if !ptocc && neighbs == 0 {
+				newgrid[pt] = true
+			} else if ptocc && neighbs >= 5 {
+				newgrid[pt] = false
+			} else {
+				newgrid[pt] = grid[pt]
+			}
 
-				if newgrid[pt] != grid[pt] {
-					changes++
-				}
+			if newgrid[pt] != grid[pt] {
+				changes++
 			}
 		}
 		if changes == 0 {
