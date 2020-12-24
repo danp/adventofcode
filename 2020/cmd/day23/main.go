@@ -9,121 +9,88 @@ import (
 func main() {
 	lines := scaffold.Lines()
 
+	min := 1
+	var max int
+
 	cupss := lines[0]
-	var cups []int
-	for _, c := range cupss {
-		cups = append(cups, scaffold.Int(string(c)))
+	cups := make(map[int]int)
+	var prev, first int
+	for i, c := range cupss {
+		ci := scaffold.Int(string(c))
+		if ci > max {
+			max = ci
+		}
+		if i == 0 {
+			first = ci
+		} else {
+			cups[prev] = ci
+		}
+		prev = ci
+	}
+	cups[prev] = first
+
+	inputCups := make(map[int]int)
+	for k, v := range cups {
+		inputCups[k] = v
 	}
 
-	clock1 := make(map[int]int)
-	var seq1 []int
+	play(inputCups, first, 100, min, max)
+	show("input-100", inputCups)
 
-	const min, max = 1, 9
-	var cur int
-	for turn := 0; turn < 100; turn++ {
-		pu := make([]int, 3)
-		for i := 0; i < 3; i++ {
-			pi := i + cur + 1
-			if pi >= len(cups) {
-				pi -= len(cups)
-			}
-			pu[i] = cups[pi]
-		}
+	bigCups := make(map[int]int)
+	for k, v := range cups {
+		bigCups[k] = v
+	}
+	for i := max + 1; i <= 1_000_000; i++ {
+		bigCups[prev] = i
+		prev = i
+	}
+	bigCups[prev] = first
 
-		dst := cups[cur] - 1
+	play(bigCups, first, 10000000, min, 1_000_000)
+	fmt.Println(bigCups[1], bigCups[bigCups[1]], bigCups[1]*bigCups[bigCups[1]])
+}
+
+func play(cups map[int]int, cur, moves, min, max int) {
+	for move := 0; move < moves; move++ {
+		fpu := cups[cur]
+		spu := cups[fpu]
+		tpu := cups[spu]
+
+		dst := cur - 1
 		if dst < min {
 			dst = max
 		}
-		for contains(pu, dst) {
+
+		for dst == fpu || dst == spu || dst == tpu {
 			dst--
 			if dst < min {
 				dst = max
 			}
 		}
-		di := index(cups, dst)
-		newdi := di - len(pu)
-		if newdi < 0 {
-			newdi += len(cups)
-		}
-		// fmt.Println(turn, cups, cur, cups[cur], pu, dst, newdi)
 
-		newcups := make([]int, len(cups))
-		newcups[newdi] = dst
-		wrotepu := make([]int, 3)
-		for i, puu := range pu {
-			ni := newdi + 1 + i
-			if ni >= len(cups) {
-				ni -= len(cups)
-			}
-			newcups[ni] = puu
-			wrotepu[i] = ni
-		}
+		apu := cups[tpu]
 
-		for i := 0; i < len(cups); i++ {
-			if i == newdi || contains(wrotepu, i) {
-				continue
-			}
+		cups[cur] = apu
 
-			oi := i
-			if (cur < newdi && i > cur && i < newdi) || (cur > newdi && (i > cur || i < newdi)) {
-				oi += 3
-				if oi >= len(cups) {
-					oi -= len(cups)
-				}
-			}
-			newcups[i] = cups[oi]
-		}
+		ad := cups[dst]
+		cups[dst] = fpu
+		cups[tpu] = ad
 
-		ncc := make(map[int]bool)
-		for _, v := range newcups {
-			if ncc[v] {
-				fmt.Println(newcups)
-				panic(fmt.Sprintf("dup value %d", v))
-			}
-			ncc[v] = true
-		}
-
-		cur++
-		if cur >= len(cups) {
-			cur = 0
-		}
-		// cups, newcups = newcups, cups
-		cups = newcups
-
-		idx1 := index(cups, 1) + 1
-		if idx1 >= len(cups) {
-			idx1 -= len(cups)
-		}
-		clock1[cups[idx1]]++
-		seq1 = append(seq1, cups[idx1])
-		fmt.Println(turn, "1c", cups[idx1], clock1)
+		cur = cups[cur]
 	}
-
-	fmt.Println(cups)
-	fmt.Println(clock1)
-	fmt.Println(seq1)
-
-	var out string
-	for i := 0; i < len(cups)-1; i++ {
-		out += fmt.Sprint(cups[(1+i+index(cups, 1))%len(cups)])
-	}
-	fmt.Println(out)
 }
 
-func contains(s []int, x int) bool {
-	for _, n := range s {
-		if n == x {
-			return true
+func show(label string, cups map[int]int) {
+	fmt.Print(label, " ")
+	k := 1
+	for {
+		v := cups[k]
+		if v == 1 {
+			break
 		}
+		fmt.Print(v)
+		k = v
 	}
-	return false
-}
-
-func index(s []int, x int) int {
-	for i, n := range s {
-		if n == x {
-			return i
-		}
-	}
-	return -1
+	fmt.Println()
 }
