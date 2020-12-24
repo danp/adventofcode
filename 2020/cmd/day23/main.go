@@ -13,7 +13,7 @@ func main() {
 	var max int
 
 	cupss := lines[0]
-	cups := make(map[int]int)
+	cups := make([]int, len(cupss)+1)
 	var prev, first int
 	for i, c := range cupss {
 		ci := scaffold.Int(string(c))
@@ -29,15 +29,13 @@ func main() {
 	}
 	cups[prev] = first
 
-	inputCups := make(map[int]int)
-	for k, v := range cups {
-		inputCups[k] = v
-	}
+	inputCups := make([]int, len(cups)+1)
+	copy(inputCups, cups)
 
 	play(inputCups, first, 100, min, max)
 	show("input-100", inputCups)
 
-	bigCups := make(map[int]int)
+	bigCups := make([]int, 1_000_000+1)
 	for k, v := range cups {
 		bigCups[k] = v
 	}
@@ -51,7 +49,7 @@ func main() {
 	fmt.Println(bigCups[1], bigCups[bigCups[1]], bigCups[1]*bigCups[bigCups[1]])
 }
 
-func play(cups map[int]int, cur, moves, min, max int) {
+func play(cups []int, cur, moves, min, max int) {
 	for move := 0; move < moves; move++ {
 		fpu := cups[cur]
 		spu := cups[fpu]
@@ -81,7 +79,7 @@ func play(cups map[int]int, cur, moves, min, max int) {
 	}
 }
 
-func show(label string, cups map[int]int) {
+func show(label string, cups []int) {
 	fmt.Print(label, " ")
 	k := 1
 	for {
