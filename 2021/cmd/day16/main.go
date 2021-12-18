@@ -14,7 +14,7 @@ func main() {
 		bits := hexToBits(l)
 		br := &bitReader{bits}
 		top := parse(br)
-		fmt.Printf("%v version sum: %v\n", l, versionSum(top))
+		fmt.Printf("%v version sum: %v result: %v\n", l, versionSum(top), eval(top))
 	}
 }
 
@@ -26,6 +26,74 @@ func versionSum(p packet) int {
 		}
 	}
 	return n
+}
+
+func eval(p packet) int {
+	if p.typ == 4 {
+		return p.value.(int)
+	}
+
+	subs := p.value.([]packet)
+
+	switch p.typ {
+	case 0:
+		var n int
+		for _, sp := range subs {
+			n += eval(sp)
+		}
+		return n
+	case 1:
+		n := -1
+		for _, sp := range subs {
+			v := eval(sp)
+			if n == -1 {
+				n = v
+			} else {
+				n *= v
+			}
+		}
+		return n
+	case 2:
+		n := -1
+		for _, sp := range subs {
+			m := eval(sp)
+			if n == -1 || m < n {
+				n = m
+			}
+		}
+		return n
+	case 3:
+		n := -1
+		for _, sp := range subs {
+			m := eval(sp)
+			if n == -1 || m > n {
+				n = m
+			}
+		}
+		return n
+	case 5:
+		var n int
+		a, b := eval(subs[0]), eval(subs[1])
+		if a > b {
+			n = 1
+		}
+		return n
+	case 6:
+		a, b := eval(subs[0]), eval(subs[1])
+		var n int
+		if a < b {
+			n = 1
+		}
+		return n
+	case 7:
+		a, b := eval(subs[0]), eval(subs[1])
+		var n int
+		if a == b {
+			n = 1
+		}
+		return n
+	}
+	panic("unknown")
 }
 
 type bitReader struct {
