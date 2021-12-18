@@ -24,11 +24,14 @@ func main() {
 		graph[b][a] = struct{}{}
 	}
 
-	ps := paths(graph, "start", "end")
+	ps := paths(graph, "start", "end", canVisit1)
 	fmt.Println(len(ps), "paths between start and end following part 1 rules")
+
+	ps = paths(graph, "start", "end", canVisit2)
+	fmt.Println(len(ps), "paths between start and end following part 2 rules")
 }
 
-func paths(graph map[string]map[string]struct{}, start, end string) [][]string {
+func paths(graph map[string]map[string]struct{}, start, end string, canVisitSmall func([]string, string) bool) [][]string {
 	var paths [][]string
 	q := [][]string{{start}}
 	for len(q) > 0 {
@@ -46,7 +49,7 @@ func paths(graph map[string]map[string]struct{}, start, end string) [][]string {
 				continue
 			}
 			if n != end && n >= "a" {
-				if visited(p, n) {
+				if !canVisitSmall(p, n) {
 					continue
 				}
 			}
@@ -60,11 +63,29 @@ func paths(graph map[string]map[string]struct{}, start, end string) [][]string {
 	return paths
 }
 
-func visited(p []string, n string) bool {
+func canVisit1(p []string, n string) bool {
 	for _, pp := range p {
 		if pp == n {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
+}
+
+func canVisit2(p []string, n string) bool {
+	smallVisits := make(map[string]int)
+	for _, pp := range p {
+		if pp >= "a" && pp != "end" && pp != "start" {
+			smallVisits[pp]++
+		}
+	}
+	if smallVisits[n] == 0 {
+		return true
+	}
+	for _, v := range smallVisits {
+		if v > 1 {
+			return false
+		}
+	}
+	return true
 }
