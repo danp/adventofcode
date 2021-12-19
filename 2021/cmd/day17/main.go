@@ -16,19 +16,18 @@ func main() {
 	_, xs, _ := strings.Cut(targetFields[2][:len(targetFields[2])-1], "=")
 	x1, x2, _ := strings.Cut(xs, "..")
 	target.Min.X = scaffold.Int(x1)
-	target.Max.X = scaffold.Int(x2)
+	target.Max.X = scaffold.Int(x2) + 1
 	_, ys, _ := strings.Cut(targetFields[3], "=")
 	y1, y2, _ := strings.Cut(ys, "..")
 	target.Min.Y = scaffold.Int(y1)
-	target.Max.Y = scaffold.Int(y2)
-	fmt.Printf("target: %v\n", target)
+	target.Max.Y = scaffold.Int(y2) + 1
 
 	start := image.Point{}
 
 	var hits []image.Point
 	var bestY int
 	for x := 0; x < target.Max.X; x++ {
-		for y := -100; y < 1000; y++ {
+		for y := target.Min.Y; y < 10000; y++ {
 			vel := image.Pt(x, y)
 
 			maxY, _, ok := check(start, vel, target)
@@ -36,13 +35,12 @@ func main() {
 				hits = append(hits, vel)
 				if maxY > bestY {
 					bestY = maxY
-					fmt.Println("new best", bestY)
 				}
 			}
 		}
 	}
-
-	fmt.Println(len(hits))
+	fmt.Println("best Y", bestY)
+	fmt.Println("good vels", len(hits))
 }
 
 func check(start, vel image.Point, target image.Rectangle) (int, image.Point, bool) {
@@ -70,11 +68,11 @@ func check(start, vel image.Point, target image.Rectangle) (int, image.Point, bo
 			return maxY, pos, true
 		}
 
-		if pos.Y < target.Min.Y-10 {
+		if pos.Y < target.Min.Y-100 {
 			return maxY, pos, false
 		}
 
-		if pos.X > target.Max.X+100 {
+		if pos.X > target.Max.X+200 {
 			return maxY, pos, false
 		}
 	}
