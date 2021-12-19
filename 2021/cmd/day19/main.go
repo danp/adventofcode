@@ -40,7 +40,9 @@ func main() {
 	pt2 := point3{686, 422, 578}
 	fmt.Printf("pt2: %v\n", pt2)
 
-	for _, o := range pt2.orientations() {
+	tfs := translations()
+	for _, tf := range tfs {
+		o := tf(pt2)
 		fmt.Printf("o: %v sub: %v\n", o, pt1.sub(o))
 	}
 
@@ -72,18 +74,29 @@ func (p point3) turn() point3 {
 	return point3{-p.y, p.x, p.z}
 }
 
-func (p point3) orientations() []point3 {
-	var out []point3
+func translations() []func(point3) point3 {
+	var out []func(point3) point3
+	var chain []func(point3) point3
+	emit := func() {
+		cc := make([]func(point3) point3, len(chain))
+		copy(cc, chain)
+		out = append(out, func(p point3) point3 {
+			for _, c := range cc {
+				p = c(p)
+			}
+			return p
+		})
+	}
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 3; j++ {
-			p = p.roll()
-			out = append(out, p)
+			chain = append(chain, (point3).roll)
+			emit()
 			for l := 0; l < 3; l++ {
-				p = p.turn()
-				out = append(out, p)
+				chain = append(chain, (point3).turn)
+				emit()
 			}
 		}
-		p = p.roll().turn().roll()
+		chain = append(chain, (point3).roll, (point3).turn, (point3).roll)
 	}
 	return out
 }
