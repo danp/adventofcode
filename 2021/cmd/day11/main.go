@@ -18,13 +18,23 @@ func main() {
 	}
 
 	var totalFlashes int
+	stepGrid := grid
 	for i := 0; i < 100; i++ {
-		newGrid, flashes := step(grid)
+		newGrid, flashes := step(stepGrid)
 		totalFlashes += flashes
-		grid = newGrid
+		stepGrid = newGrid
 	}
-
 	fmt.Printf("totalFlashes: %v\n", totalFlashes)
+
+	stepGrid = grid
+	for i := 0; i < 10000; i++ {
+		newGrid, flashes := step(stepGrid)
+		if flashes == len(newGrid) {
+			fmt.Printf("sync flash step: %v\n", i+1)
+			break
+		}
+		stepGrid = newGrid
+	}
 }
 
 func step(grid map[image.Point]int) (map[image.Point]int, int) {
