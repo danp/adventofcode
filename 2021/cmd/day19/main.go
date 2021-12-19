@@ -65,10 +65,11 @@ func main() {
 		mf := mt(mappings, si)
 		for pt := range s.beacons {
 			npt := mf(pt)
-			fmt.Printf("si: %v pt: %v npt: %v\n", si, pt, npt)
 			beacons[npt] = struct{}{}
 		}
 	}
+
+	fmt.Printf("len(beacons): %v\n", len(beacons))
 }
 
 type mapping struct {
