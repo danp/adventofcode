@@ -27,7 +27,7 @@ func main() {
 
 	var hits []image.Point
 	var bestY int
-	for x := 0; x < 10000; x++ {
+	for x := 0; x < target.Max.X; x++ {
 		for y := -100; y < 1000; y++ {
 			vel := image.Pt(x, y)
 
@@ -53,10 +53,6 @@ func check(start, vel image.Point, target image.Rectangle) (int, image.Point, bo
 		pos.X += vel.X
 		pos.Y += vel.Y
 
-		if pos.Y > maxY {
-			maxY = pos.Y
-		}
-
 		if vel.X > 0 {
 			vel.X -= 1
 		}
@@ -65,6 +61,11 @@ func check(start, vel image.Point, target image.Rectangle) (int, image.Point, bo
 
 	for i := 0; i < 100000; i++ {
 		step()
+
+		if pos.Y > maxY {
+			maxY = pos.Y
+		}
+
 		if pos.In(target) {
 			return maxY, pos, true
 		}
