@@ -33,29 +33,37 @@ func main() {
 		scanners = append(scanners, s)
 	}
 
-	pt1 := point3{-618, -824, -621}
-	fmt.Printf("pt1: %v\n", pt1)
-	// off := point3{68, -1246, -43}
+	type mapping struct {
+		idx int
+		tf  func(point3) point3
+		off point3
+	}
+	mappings := make(map[int]mapping)
 
-	pt2 := point3{686, 422, 578}
-	fmt.Printf("pt2: %v\n", pt2)
+	for s1i, s1 := range scanners {
+		for s2i, s2 := range scanners {
+			if s1i == s2i {
+				continue
+			}
 
-	tfs := translations()
-	for _, tf := range tfs {
-		o := tf(pt2)
-		fmt.Printf("o: %v sub: %v\n", o, pt1.sub(o))
+			for tfi, tf := range translations() {
+				offs := make(map[point3]int)
+				for s1pt := range s1.beacons {
+					for s2pt := range s2.beacons {
+						offs[s1pt.sub(tf(s2pt))]++
+					}
+				}
+				for off, v := range offs {
+					if v >= 12 {
+						fmt.Printf("tfi: %v off: %v v: %v\n", tfi, off, v)
+						mappings[s1i] = mapping{s2i, tf, off}
+					}
+				}
+			}
+		}
 	}
 
-	// given 1,2,3
-	// if roll forward
-	// becomes 1,3,2
-
-	// given -1,-2,-3
-	// if roll forward
-	// becomes -1,-3,-2
-
-	// what translations are needed to make this work?
-
+	fmt.Printf("mappings: %v\n", mappings)
 }
 
 type point3 struct {
