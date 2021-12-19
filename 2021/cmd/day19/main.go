@@ -33,12 +33,7 @@ func main() {
 		scanners = append(scanners, s)
 	}
 
-	type mapping struct {
-		idx int
-		tf  func(point3) point3
-		off point3
-	}
-	mappings := make(map[int]mapping)
+	mappings := make(map[int]map[int]mapping)
 
 	for s1i, s1 := range scanners {
 		for s2i, s2 := range scanners {
@@ -46,7 +41,7 @@ func main() {
 				continue
 			}
 
-			for tfi, tf := range translations() {
+			for _, tf := range translations() {
 				offs := make(map[point3]int)
 				for s1pt := range s1.beacons {
 					for s2pt := range s2.beacons {
@@ -55,15 +50,71 @@ func main() {
 				}
 				for off, v := range offs {
 					if v >= 12 {
-						fmt.Printf("tfi: %v off: %v v: %v\n", tfi, off, v)
-						mappings[s1i] = mapping{s2i, tf, off}
+						if mappings[s1i] == nil {
+							mappings[s1i] = make(map[int]mapping)
+						}
+						mappings[s1i][s2i] = mapping{s2i, tf, off}
 					}
 				}
 			}
 		}
 	}
 
-	fmt.Printf("mappings: %v\n", mappings)
+	beacons := make(map[point3]struct{})
+	for si, s := range scanners {
+		mf := mt(mappings, si)
+		for pt := range s.beacons {
+			npt := mf(pt)
+			fmt.Printf("si: %v pt: %v npt: %v\n", si, pt, npt)
+			beacons[npt] = struct{}{}
+		}
+	}
+}
+
+type mapping struct {
+	idx int
+	tf  func(point3) point3
+	off point3
+}
+
+func mt(mappings map[int]map[int]mapping, src int) func(point3) point3 {
+	if src == 0 {
+		return func(p point3) point3 {
+			return p
+		}
+	}
+
+	q := [][]int{{0}}
+	for len(q) > 0 {
+		p := q[0]
+		q = q[1:]
+
+		last := p[len(p)-1]
+		if last == src {
+			var chain []func(point3) point3
+			for i := len(p) - 1; i > 0; i-- {
+				m := mappings[p[i-1]][p[i]]
+				chain = append(chain, func(p point3) point3 {
+					return m.tf(p).add(m.off)
+				})
+			}
+			return func(p point3) point3 {
+				for _, f := range chain {
+					p = f(p)
+				}
+				return p
+			}
+		}
+
+		for n := range mappings[last] {
+			newp := make([]int, len(p))
+			copy(newp, p)
+			newp = append(newp, n)
+			q = append(q, newp)
+		}
+	}
+
+	panic("no")
 }
 
 type point3 struct {
@@ -72,6 +123,10 @@ type point3 struct {
 
 func (p point3) sub(o point3) point3 {
 	return point3{p.x - o.x, p.y - o.y, p.z - o.z}
+}
+
+func (p point3) add(o point3) point3 {
+	return point3{p.x + o.x, p.y + o.y, p.z + o.z}
 }
 
 func (p point3) roll() point3 {
