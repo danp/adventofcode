@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/danp/adventofcode/scaffold"
@@ -61,15 +62,28 @@ func main() {
 	}
 
 	beacons := make(map[point3]struct{})
+	scannerPts := make(map[int]point3)
 	for si, s := range scanners {
 		mf := mt(mappings, si)
 		for pt := range s.beacons {
 			npt := mf(pt)
 			beacons[npt] = struct{}{}
 		}
+		scannerPts[si] = mf(point3{0, 0, 0})
+	}
+	fmt.Printf("len(beacons): %v\n", len(beacons))
+
+	var maxDist int
+	for _, s1pt := range scannerPts {
+		for _, s2pt := range scannerPts {
+			d := s1pt.dist(s2pt)
+			if d > maxDist {
+				maxDist = d
+			}
+		}
 	}
 
-	fmt.Printf("len(beacons): %v\n", len(beacons))
+	fmt.Printf("maxDist: %v\n", maxDist)
 }
 
 type mapping struct {
@@ -136,6 +150,10 @@ func (p point3) roll() point3 {
 
 func (p point3) turn() point3 {
 	return point3{-p.y, p.x, p.z}
+}
+
+func (p point3) dist(o point3) int {
+	return int(math.Abs(float64(p.x-o.x))) + int(math.Abs(float64(p.y-o.y))) + int(math.Abs(float64(p.z-o.z)))
 }
 
 func translations() []func(point3) point3 {
