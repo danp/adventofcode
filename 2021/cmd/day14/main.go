@@ -15,16 +15,15 @@ func main() {
 	for _, p := range pairs(lines[0]) {
 		tmpl[p]++
 	}
+	counts := make(map[string]int)
+	for _, c := range lines[0] {
+		counts[string(c)]++
+	}
 
 	rules := make(map[string]string)
 	for _, l := range lines[2:] {
 		a, b, _ := strings.Cut(l, " -> ")
 		rules[a] = b
-	}
-
-	counts := make(map[string]int)
-	for _, c := range tmpl {
-		counts[string(c)]++
 	}
 
 	fmt.Printf("tmpl: %v\n", tmpl)
@@ -47,11 +46,18 @@ func main() {
 }
 
 func step(tmpl map[string]int, counts map[string]int, rules map[string]string) (map[string]int, map[string]int) {
-	out := make(map[string]int)
-	for p := range tmpl {
-		fmt.Printf("p: %v\n", p)
+	newTmpl := make(map[string]int)
+	newCounts := make(map[string]int)
+	for tp, tv := range tmpl {
+		r := rules[tp]
+		newTmpl[string(tp[0])+r] += tv
+		newTmpl[r+string(tp[1])] += tv
+
+		newCounts[string(tp[0])] += tv
+		newCounts[string(tp[1])] += tv
+		newCounts[r] += tv
 	}
-	return out, counts
+	return newTmpl, newCounts
 }
 
 func pairs(t string) []string {
