@@ -24,7 +24,9 @@ func main() {
 	for y, l := range lines[1:] {
 		for x, c := range l {
 			pt := image.Pt(x, y)
-			grid[pt] = c == '#'
+			if c == '#' {
+				grid[pt] = true
+			}
 			rect.Max = pt
 		}
 	}
@@ -43,7 +45,6 @@ func main() {
 
 	var missing bool
 	for i := 0; i < 2; i++ {
-		fmt.Printf("missing: %v\n", missing)
 		grid, rect, missing = step(algo, rect, grid, missing)
 		show(rect, grid, missing)
 	}
@@ -84,7 +85,7 @@ func step(algo string, rect image.Rectangle, grid map[image.Point]bool, missing 
 	}
 
 	if missing {
-		missing = algo[len(algo)-1] == '.'
+		missing = algo[len(algo)-1] == '#'
 	} else {
 		missing = algo[0] == '#'
 	}
