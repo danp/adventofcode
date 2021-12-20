@@ -49,26 +49,7 @@ func main() {
 func step(tmpl map[string]int, counts map[string]int, rules map[string]string) (map[string]int, map[string]int) {
 	out := make(map[string]int)
 	for p := range tmpl {
-		out[string(p[0])+rules[p]]++
-		out[rules[p]+string(p[1])]++
-
-		v := counts[string(p[0])]
-		if v == 0 {
-			v = 1
-		}
-		counts[string(p[0])] = v + out[string(p[0])+rules[p]]
-		v = counts[rules[p]]
-		if v == 0 {
-			v = 1
-		}
-		counts[rules[p]] = v + out[string(p[0])+rules[p]]
-
-		v = counts[string(p[1])]
-		if v == 0 {
-			v = 1
-		}
-		counts[string(p[1])] = v + out[rules[p]+string(p[1])]
-		counts[rules[p]] += out[rules[p]+string(p[1])]
+		fmt.Printf("p: %v\n", p)
 	}
 	return out, counts
 }
