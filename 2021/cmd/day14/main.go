@@ -26,11 +26,8 @@ func main() {
 		rules[a] = b
 	}
 
-	fmt.Printf("tmpl: %v\n", tmpl)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 40; i++ {
 		tmpl, counts = step(tmpl, counts, rules)
-		fmt.Printf("tmpl: %v\n", tmpl)
-		fmt.Printf("counts: %v\n", counts)
 	}
 
 	var cs []string
@@ -48,13 +45,16 @@ func main() {
 func step(tmpl map[string]int, counts map[string]int, rules map[string]string) (map[string]int, map[string]int) {
 	newTmpl := make(map[string]int)
 	newCounts := make(map[string]int)
+	for k, v := range counts {
+		newCounts[k] = v
+	}
 	for tp, tv := range tmpl {
 		r := rules[tp]
 		newTmpl[string(tp[0])+r] += tv
 		newTmpl[r+string(tp[1])] += tv
 
-		newCounts[string(tp[0])] += tv
-		newCounts[string(tp[1])] += tv
+		// newCounts[string(tp[0])] += tv
+		// newCounts[string(tp[1])] += tv
 		newCounts[r] += tv
 	}
 	return newTmpl, newCounts
