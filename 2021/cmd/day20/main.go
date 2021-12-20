@@ -28,15 +28,25 @@ func main() {
 			rect.Max = pt
 		}
 	}
-	missing := algo[0] == '#'
 
-	show(rect, grid, missing)
+	// first input is default=dark
+	// pixels outside boundary will flip to whatever algo[0] is
+	// pixels inside boundary will assume missing are dark, change based on that
+	//
+	// result: missing=lit, known pixels are what they are
+	//
+	// this input is default=lit
+	// pixels outside boundary will flip to whatever algo[-1] is
+	// pixels inside boundary will assume missing are lit, change based on that
 
+	show(rect, grid, false)
+
+	var missing bool
 	for i := 0; i < 2; i++ {
+		fmt.Printf("missing: %v\n", missing)
 		grid, rect, missing = step(algo, rect, grid, missing)
+		show(rect, grid, missing)
 	}
-
-	show(rect, grid, missing)
 
 	var lit int
 	for _, v := range grid {
@@ -63,8 +73,8 @@ func show(rect image.Rectangle, grid map[image.Point]bool, missing bool) {
 
 func step(algo string, rect image.Rectangle, grid map[image.Point]bool, missing bool) (map[image.Point]bool, image.Rectangle, bool) {
 	newGrid := make(map[image.Point]bool)
-	rect.Min = rect.Min.Add(image.Pt(-3, -3))
-	rect.Max = rect.Max.Add(image.Pt(3, 3))
+	rect.Min = rect.Min.Add(image.Pt(-1, -1))
+	rect.Max = rect.Max.Add(image.Pt(1, 1))
 	for y := rect.Min.Y; y <= rect.Max.Y; y++ {
 		for x := rect.Min.X; x <= rect.Max.X; x++ {
 			pt := image.Pt(x, y)
