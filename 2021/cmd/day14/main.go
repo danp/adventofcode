@@ -23,6 +23,9 @@ func main() {
 	}
 
 	counts := make(map[string]int)
+	for _, c := range tmpl {
+		counts[string(c)]++
+	}
 
 	fmt.Printf("tmpl: %v\n", tmpl)
 	for i := 0; i < 10; i++ {
