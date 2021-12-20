@@ -44,18 +44,20 @@ func main() {
 	show(rect, grid, false)
 
 	var missing bool
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 50; i++ {
 		grid, rect, missing = step(algo, rect, grid, missing)
-		show(rect, grid, missing)
-	}
 
-	var lit int
-	for _, v := range grid {
-		if v {
-			lit++
+		if i == 1 || i == 49 {
+			var lit int
+			for _, v := range grid {
+				if v {
+					lit++
+				}
+			}
+			fmt.Printf("lit: %v\n", lit)
+			show(rect, grid, missing)
 		}
 	}
-	fmt.Printf("lit: %v\n", lit)
 }
 
 func show(rect image.Rectangle, grid map[image.Point]bool, missing bool) {
