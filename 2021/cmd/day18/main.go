@@ -4,26 +4,22 @@ import (
 	"fmt"
 )
 
-type atomInt int
-
-type atomPair struct {
-	a, b atomElement
-}
-
-func (p atomPair) add(b atomPair) atomPair {
-	return atomPair{p, b}
-}
-
-type atomElement interface{}
-
 func main() {
 	// lines := scaffold.Lines()
 
-	a := atomPair{1, 2}
-	b := atomPair{atomPair{3, 4}, 5}
+	n1 := pair{1, 2}
+	n2 := pair{pair{3, 4}, 5}
 
-	c := a.add(b)
-	fmt.Println(c)
+	n3 := n1.add(n2)
+	fmt.Printf("n3: %v\n", n3)
+}
 
-	// [1,2] + [[3,4],5] becomes [[1,2],[[3,4],5]]
+type node interface{}
+
+type pair struct {
+	a, b node
+}
+
+func (p pair) add(o pair) pair {
+	return pair{p, o}
 }
