@@ -7,11 +7,11 @@ import (
 func main() {
 	// lines := scaffold.Lines()
 
-	n1 := pair{1, 2}
-	n2 := pair{pair{3, 4}, 5}
+	r1 := pair{pair{pair{pair{pair{9, 8}, 1}, 2}, 3}, 4}
+	r2 := pair{pair{pair{pair{0, 9}, 2}, 3}, 4}
 
-	n3 := n1.add(n2)
-	fmt.Printf("n3: %v\n", n3)
+	fmt.Printf("r1: %v\n", r1)
+	fmt.Printf("r2: %v\n", r2)
 }
 
 type node interface{}
