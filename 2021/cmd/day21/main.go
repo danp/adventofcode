@@ -22,7 +22,7 @@ func main() {
 	})
 	fmt.Printf("scores: %v wp: %v rolls: %v\n", scores, wp, rolls)
 
-	for i := 1; i <= 9; i++ {
+	for i := 3; i <= 9; i++ {
 		scores, wp, rolls = play(pos, 21, func(int) int {
 			return i
 		})
