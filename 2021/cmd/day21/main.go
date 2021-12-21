@@ -17,14 +17,25 @@ func main() {
 		2: scaffold.Int(fields1[4]),
 	}
 
-	scores, rolls := play(pos, 1000, func(i int) int {
+	scores, wp, rolls := play(pos, 1000, func(i int) int {
 		return i + (i + 1) + (i + 2)
 	})
+	fmt.Printf("scores: %v wp: %v rolls: %v\n", scores, wp, rolls)
 
-	fmt.Printf("scores: %v rolls: %v\n", scores, rolls)
+	for i := 1; i <= 9; i++ {
+		scores, wp, rolls = play(pos, 21, func(int) int {
+			return i
+		})
+		fmt.Printf("scores: %v wp: %v rolls: %v\n", scores, wp, rolls)
+	}
 }
 
-func play(pos map[int]int, winCutoff int, roll func(int) int) (map[int]int, int) {
+func play(pos map[int]int, winCutoff int, roll func(int) int) (map[int]int, int, int) {
+	npos := make(map[int]int)
+	for k, v := range pos {
+		npos[k] = v
+	}
+	pos = npos
 	scores := make(map[int]int)
 	p := 1
 	var rolls int
@@ -39,7 +50,7 @@ func play(pos map[int]int, winCutoff int, roll func(int) int) (map[int]int, int)
 
 		if scores[p] >= winCutoff {
 			rolls = i + 2
-			return scores, rolls
+			return scores, p, rolls
 		}
 
 		switch p {
