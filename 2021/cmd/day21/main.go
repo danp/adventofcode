@@ -26,7 +26,7 @@ func main() {
 		scores, wp, rolls = play(pos, 21, func(int) int {
 			return i
 		})
-		fmt.Printf("scores: %v wp: %v rolls: %v\n", scores, wp, rolls)
+		fmt.Printf("i: %v scores: %v wp: %v rolls: %v\n", i, scores, wp, rolls)
 	}
 }
 
