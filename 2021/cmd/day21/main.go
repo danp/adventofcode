@@ -17,17 +17,19 @@ func main() {
 		2: scaffold.Int(fields1[4]),
 	}
 
-	scores, rolls := play(pos)
+	scores, rolls := play(pos, 1000, func(i int) int {
+		return i + (i + 1) + (i + 2)
+	})
 
 	fmt.Printf("scores: %v rolls: %v\n", scores, rolls)
 }
 
-func play(pos map[int]int) (map[int]int, int) {
+func play(pos map[int]int, winCutoff int, roll func(int) int) (map[int]int, int) {
 	scores := make(map[int]int)
 	p := 1
 	var rolls int
 	for i := 1; i < 1000; i += 3 {
-		n := i + (i + 1) + (i + 2)
+		n := roll(i)
 		np := (pos[p] + n)
 		for np > 10 {
 			np -= 10
@@ -35,7 +37,7 @@ func play(pos map[int]int) (map[int]int, int) {
 		pos[p] = np
 		scores[p] += np
 
-		if scores[p] >= 1000 {
+		if scores[p] >= winCutoff {
 			rolls = i + 2
 			return scores, rolls
 		}
