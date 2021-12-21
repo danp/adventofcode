@@ -12,12 +12,18 @@ func main() {
 	fields0 := strings.Fields(lines[0])
 	fields1 := strings.Fields(lines[1])
 
-	scores := make(map[int]int)
 	pos := map[int]int{
 		1: scaffold.Int(fields0[4]),
 		2: scaffold.Int(fields1[4]),
 	}
 
+	scores, rolls := play(pos)
+
+	fmt.Printf("scores: %v rolls: %v\n", scores, rolls)
+}
+
+func play(pos map[int]int) (map[int]int, int) {
+	scores := make(map[int]int)
 	p := 1
 	var rolls int
 	for i := 1; i < 1000; i += 3 {
@@ -31,7 +37,7 @@ func main() {
 
 		if scores[p] >= 1000 {
 			rolls = i + 2
-			break
+			return scores, rolls
 		}
 
 		switch p {
@@ -41,6 +47,5 @@ func main() {
 			p = 1
 		}
 	}
-
-	fmt.Printf("scores: %v rolls: %v\n", scores, rolls)
+	panic("no winner")
 }
