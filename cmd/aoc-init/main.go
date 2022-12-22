@@ -4,13 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"go/build"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"golang.org/x/term"
 )
 
 func main() {
@@ -18,6 +20,13 @@ func main() {
 	year := flag.Int("year", now.Year(), "year to work in")
 	day := flag.Int("day", now.Day(), "day to work on")
 	flag.Parse()
+
+	if len(os.Args) > 1 && os.Args[1] == "save" {
+		if err := saveSession(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	base := os.Getenv("ADVENT_OF_CODE_BASE")
 	if base == "" {
@@ -41,11 +50,11 @@ func main() {
 	dayMain := filepath.Join(dayBase, "main.go")
 	if _, err := os.Stat(dayMain); os.IsNotExist(err) {
 		log.Println(dayMain, "creating")
-		mainTmpl, err := ioutil.ReadFile(filepath.Join(base, "cmd", "aoc-init", "main.go.tmpl"))
+		mainTmpl, err := os.ReadFile(filepath.Join(base, "cmd", "aoc-init", "main.go.tmpl"))
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := ioutil.WriteFile(filepath.Join(dayMain), mainTmpl, 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dayMain), mainTmpl, 0600); err != nil {
 			log.Fatal(err)
 		}
 	} else if err != nil {
@@ -67,7 +76,7 @@ func main() {
 				log.Println(dayInput, "unable to fetch:", err)
 			}
 
-			if err := ioutil.WriteFile(filepath.Join(dayInput), input, 0600); err != nil {
+			if err := os.WriteFile(filepath.Join(dayInput), input, 0600); err != nil {
 				log.Fatal(err)
 			}
 		} else if err != nil {
@@ -79,13 +88,33 @@ func main() {
 
 }
 
+func saveSession() error {
+	fmt.Print("Session: ")
+	b, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return err
+	}
+
+	config, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+
+	d := filepath.Join(config, "adventofcode")
+	if err := os.MkdirAll(d, 0700); err != nil {
+		return err
+	}
+
+	return os.WriteFile(filepath.Join(d, "session"), b, 0600)
+}
+
 func loadSession() (string, error) {
 	config, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
 
-	sb, err := ioutil.ReadFile(filepath.Join(config, "adventofcode", "session"))
+	sb, err := os.ReadFile(filepath.Join(config, "adventofcode", "session"))
 	return string(sb), err
 }
 
@@ -102,7 +131,7 @@ func fetchInput(session string, year, day int) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

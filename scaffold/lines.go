@@ -1,13 +1,13 @@
 package scaffold
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 )
 
 func Lines() []string {
-	b, err := ioutil.ReadAll(os.Stdin)
+	b, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		panic(err)
 	}
